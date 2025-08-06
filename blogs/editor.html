@@ -4,105 +4,99 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blog Editor – PlaylistGurl</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" />
   <style>
     body {
-      font-family: sans-serif;
-      background: #f0f0f0;
-      margin: 0;
-      padding: 0;
-    }
-    .login-container, .editor-container {
+      background-color: #121212;
+      color: #f1f1f1;
+      font-family: 'Segoe UI', sans-serif;
+      line-height: 1.8;
+      padding: 40px 20px;
       max-width: 800px;
-      margin: 2rem auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin: auto;
     }
-    #editor {
-      height: 400px;
+    h1, h2 {
+      color: #ff4dc4;
+      text-align: center;
+      margin-bottom: 30px;
     }
-    input, button {
-      font-size: 1rem;
-      padding: 0.5rem;
-      margin-top: 0.5rem;
+    pre {
+      background-color: #1e1e1e;
+      border-left: 4px solid #ff4dc4;
+      padding: 20px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: monospace;
+      margin-bottom: 40px;
+    }
+    p {
+      margin-bottom: 20px;
+    }
+    em {
+      color: #ff99d6;
+    }
+    strong {
+      color: #ffffff;
+    }
+    textarea {
       width: 100%;
+      height: 300px;
+      background-color: #1e1e1e;
+      color: #f1f1f1;
+      border: 1px solid #333;
+      padding: 15px;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 1rem;
+      margin-top: 20px;
     }
-    .hidden { display: none; }
+    button {
+      background-color: #ff4dc4;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    footer {
+      margin-top: 60px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+    #editorOutput {
+      margin-top: 40px;
+      background-color: #1e1e1e;
+      padding: 20px;
+      white-space: pre-wrap;
+      border-left: 4px solid #ff4dc4;
+    }
   </style>
 </head>
 <body>
+  <h1>Create a Blog Post</h1>
+  <input type="text" id="title" placeholder="Blog Post Title" style="width:100%;padding:10px;font-size:1rem;">
+  <textarea id="editor" placeholder="Write your blog post here using *bold*, _italic_, and [code blocks]...\n\nPaste lyrics and write like Microsoft Word!"></textarea>
+  <button onclick="renderPreview()">Render Preview</button>
+  <div id="editorOutput"></div>
 
-<div class="login-container" id="loginBox">
-  <h2>Login to Blog Editor</h2>
-  <input type="text" id="username" placeholder="Username" required />
-  <input type="password" id="password" placeholder="Password" required />
-  <button onclick="handleLogin()">Login</button>
-  <p id="loginError" style="color:red; display:none;">Invalid credentials.</p>
-</div>
-
-<div class="editor-container hidden" id="editorBox">
-  <h2>Create a Blog Post</h2>
-  <input type="text" id="title" placeholder="Post Title" required />
-  <div id="editor"></div>
-  <button onclick="savePost()">Save Blog Post</button>
-  <a id="downloadLink" style="display:none; margin-top:1rem; display:block;">Download HTML</a>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
-<script>
-  const editor = new Quill('#editor', {
-    theme: 'snow'
-  });
-
-  const USERS = [
-    { username: 'admin', password: 'securepassword123' },
-    // Add more users if needed
-  ];
-
-  function handleLogin() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
-    const match = USERS.find(u => u.username === user && u.password === pass);
-    if (match) {
-      document.getElementById('loginBox').classList.add('hidden');
-      document.getElementById('editorBox').classList.remove('hidden');
-    } else {
-      document.getElementById('loginError').style.display = 'block';
-    }
-  }
-
-  function savePost() {
-    const title = document.getElementById('title').value.trim();
-    const content = editor.root.innerHTML;
-
-    const blogHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  <link rel="stylesheet" href="styles/style.css">
-</head>
-<body>
-  <h1>${title}</h1>
-  ${content}
   <footer>
     &copy; 2025 Playlist Gurl – Blog post by PlaylistGurl
   </footer>
-</body>
-</html>`;
 
-    const blob = new Blob([blogHtml], { type: 'text/html' });
-    const link = document.getElementById('downloadLink');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${title.replace(/\s+/g, '_').toLowerCase()}.html`;
-    link.style.display = 'block';
-    link.textContent = 'Download your blog post';
-  }
-</script>
-
+  <script>
+    function renderPreview() {
+      const raw = document.getElementById('editor').value;
+      const title = document.getElementById('title').value || 'Untitled Post';
+      let html = raw
+        .replace(/^\*\*(.*?)\*\*/gm, '<strong>$1</strong>') // bold
+        .replace(/^\*(.*?)\*/gm, '<strong>$1</strong>') // bold shorthand
+        .replace(/_(.*?)_/gm, '<em>$1</em>') // italic
+        .replace(/\n{2,}/g, '</p><p>') // paragraphs
+        .replace(/\n/g, '<br>');
+      html = `<h2>${title}</h2><p>${html}</p>`;
+      document.getElementById('editorOutput').innerHTML = html;
+    }
+  </script>
 </body>
 </html>
