@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog Editor – PlaylistGurl</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #f1f1f1;
+      font-family: 'Segoe UI', sans-serif;
+      line-height: 1.8;
+      padding: 40px 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1, h2 {
+      color: #ff4dc4;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .toolbar button, .toolbar select {
+      background-color: #1e1e1e;
+      color: #f1f1f1;
+      border: 1px solid #444;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .toolbar select {
+      padding: 8px;
+    }
+    pre.lyrics {
+      background-color: #1e1e1e;
+      border-left: 4px solid #ff4dc4;
+      padding: 20px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: monospace;
+      margin-bottom: 40px;
+    }
+    textarea {
+      width: 100%;
+      height: 300px;
+      background-color: #1e1e1e;
+      color: #f1f1f1;
+      border: 1px solid #333;
+      padding: 15px;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 1rem;
+    }
+    button.render, button.download {
+      background-color: #ff4dc4;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 15px;
+      margin-right: 10px;
+    }
+    #editorOutput {
+      margin-top: 40px;
+      background-color: #1e1e1e;
+      padding: 20px;
+      white-space: pre-wrap;
+      border-left: 4px solid #ff4dc4;
+    }
+    footer {
+      margin-top: 60px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <h1>Create a Blog Post</h1>
+  <input type="text" id="title" placeholder="Blog Post Title" style="width:100%;padding:10px;font-size:1rem;margin-bottom:20px;">
+
+  <div class="toolbar">
+    <button onclick="insertTag('**', '**')">Bold</button>
+    <button onclick="insertTag('_', '_')">Italic</button>
+    <button onclick="insertTag('[lyrics]\\n', '\\n[/lyrics]')">Lyrics</button>
+    <select id="colorSelect" onchange="insertColor()">
+      <option value="">🎨 Color...</option>
+      <option value="red">Red</option>
+      <option value="lime">Lime</option>
+      <option value="blue">Blue</option>
+      <option value="yellow">Yellow</option>
+      <option value="cyan">Cyan</option>
+      <option value="magenta">Magenta</option>
+      <option value="orange">Orange</option>
+      <option value="pink">Pink</option>
+      <option value="white">White</option>
+
+    </select>
+          
+  </div>
+
+  <textarea id="editor" placeholder="Write your blog post using buttons or custom tags..."></textarea>
+  <div>
+    <button class="render" onclick="renderPreview()">Render Preview</button>
+    <button class="download" onclick="downloadHTML()">Download HTML</button>
+    <button class="download" onclick="openTutorial()">Tutorial</button>
+  </div>
+  <div id="editorOutput"></div>
+
+  <footer>&copy; 2025 Playlist Gurl – Blog post by PlaylistGurl</footer>
+
+  <script>
+    function escapeHTML(str) {
+      return str.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+    }
+
+    function insertTag(startTag, endTag) {
+      const textarea = document.getElementById("editor");
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      const newText = startTag + selectedText + endTag;
+
+      textarea.setRangeText(newText, start, end, 'end');
+      textarea.focus();
+    }
+
+    function insertColor() {
+      const color = document.getElementById("colorSelect").value;
+      if (!color) return;
+      insertTag(`[color=${color}]`, `[/color]`);
+      document.getElementById("colorSelect").selectedIndex = 0; // Reset dropdown
+    }
+
+    function renderPreview() {
+      const raw = document.getElementById('editor').value;
+      const title = document.getElementById('title').value || 'Untitled Post';
+
+      let safeText = escapeHTML(raw);
+
+      let html = safeText
+        .replace(/\[lyrics\]([\s\S]*?)\[\/lyrics\]/gi, '<pre class="lyrics">$1</pre>')
+        .replace(/\[color=(\w+)\]([\s\S]*?)\[\/color\]/gi, '<span style="color:$1">$2</span>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+        .replace(/_(.*?)_/g, '<em>$1</em>')
+        .replace(/\n{2,}/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+
+      html = `<h2>${title}</h2><p>${html}</p>`;
+      document.getElementById('editorOutput').innerHTML = html;
+    }
+function openTutorial() {
+  window.open('tutorial.html', '_blank');
+}
+
+    function downloadHTML() {
+      const content = document.getElementById('editorOutput').innerHTML;
+      const title = document.getElementById('title').value || 'Untitled Post';
+
+      // Basic standalone HTML document with minimal styles for the content
+      const htmlTemplate = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${title}</title>
+<style>
+  body {
+    background-color: #121212;
+    color: #f1f1f1;
+    font-family: 'Segoe UI', sans-serif;
+    line-height: 1.8;
+    padding: 40px 20px;
+    max-width: 800px;
+    margin: auto;
+  }
+  h2 {
+    color: #ff4dc4;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  pre.lyrics {
+    background-color: #1e1e1e;
+    border-left: 4px solid #ff4dc4;
+    padding: 20px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: monospace;
+    margin-bottom: 40px;
+  }
+  strong {
+    color: #fff;
+  }
+  em {
+    color: #ff99d6;
+  }
+</style>
+</head>
+<body>
+${content}
+</body>
+</html>`;
+
+      const blob = new Blob([htmlTemplate], {type: 'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title.replace(/\s+/g, '_') || 'blog_post'}.html`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 0);
+    }
+  </script>
+</body>
+</html>
